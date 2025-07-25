@@ -132,7 +132,6 @@ function PLUGIN:BackendInstall(ctx)
 	os.remove(tmp_tgz)
 
 	-- Install dependencies
-	print(pkg)
 	local deps = fetch_dependencies(pkg)
 	for _, dep in pairs(deps) do
 		local dep_ver = fetch_latest_version(dep, plat, arch)
