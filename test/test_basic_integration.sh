@@ -1,10 +1,11 @@
 #!/bin/bash
 # Basic integration test for mise-pkgx-backend plugin
-# Tests basic functionality without complex scenarios
+# Tests basic functionality with multiple tools without complex scenarios
 
 set -e
 
 PLUGIN_NAME="pkgx-basic-test"
+TEST_TOOLS=("git-scm.org" "nodejs.org" "python.org")
 CURRENT_DIR=$(pwd)
 
 # Colors for output
@@ -60,17 +61,21 @@ main() {
         exit 1
     fi
     
-    # Test 3: Try to trigger the backend (even if it fails, we know it's trying)
-    log "Test 2: Testing backend functionality..."
-    OUTPUT=$(mise install "$PLUGIN_NAME:git-scm.org@2.44.0" 2>&1 || true)
+    # Test 3: Try to trigger the backend with multiple tools
+    log "Test 3: Testing backend functionality with multiple tools..."
     
-    if echo "$OUTPUT" | grep -q "Backend\|install\|download\|fetch"; then
-        log "✓ Backend plugin is being invoked"
-    elif echo "$OUTPUT" | grep -q "Failed to install"; then
-        log "✓ Backend plugin attempted installation (expected for alpha plugin)"
-    else
-        warn "Backend output: $(echo "$OUTPUT" | head -2)"
-    fi
+    for tool in "${TEST_TOOLS[@]}"; do
+        log "Testing backend with $tool..."
+        OUTPUT=$(mise install "$PLUGIN_NAME:$tool@latest" 2>&1 || true)
+        
+        if echo "$OUTPUT" | grep -q "Backend\|install\|download\|fetch"; then
+            log "  ✓ Backend plugin invoked for $tool"
+        elif echo "$OUTPUT" | grep -q "Failed to install"; then
+            log "  ✓ Backend plugin attempted installation for $tool (expected for alpha plugin)"
+        else
+            warn "  Backend output for $tool: $(echo "$OUTPUT" | head -1)"
+        fi
+    done
     
     log "✅ Basic integration tests completed"
     log "Note: This plugin is marked as 'mega alpha' - some functionality may not work perfectly"

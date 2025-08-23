@@ -109,6 +109,7 @@ The project includes comprehensive test suites:
 - `test_basic_integration.sh`: Basic integration testing with actual mise commands
 - `test_integration.sh`: Full end-to-end testing (may be unstable due to alpha status)
 - Tests plugin linking, backend invocation, and basic functionality
+- Tests multiple tools: git-scm.org, nodejs.org, python.org
 
 **Running Tests**:
 ```bash
