@@ -6,7 +6,7 @@ source test/assert.sh
 
 tool="$PLUGIN_NAME:gnu.org/tar"
 
-mise install "$tool"
+mise install "$tool@1.35"
 
 result=$(mise exec "$tool" -- tar --version)
 
