@@ -13,3 +13,6 @@ run = "./mise-tasks/test"
 [tasks."test:integration"]
 description = "Run unit and integration tests"
 run = "./mise-tasks/test --with-integration"
+
+[tools]
+shfmt = "latest"

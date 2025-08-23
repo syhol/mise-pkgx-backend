@@ -4,8 +4,7 @@
 
 set -e
 
-PLUGIN_NAME="pkgx-test"
-TEST_TOOLS=("git-scm.org" "nodejs.org" "python.org")
+export PLUGIN_NAME="pkgx-test"
 CURRENT_DIR=$(pwd)
 
 # Colors for output
@@ -28,13 +27,12 @@ error() {
 
 cleanup() {
     log "Cleaning up test environment..."
-    
+
     # Uninstall test tools if installed
-    for tool in "${TEST_TOOLS[@]}"; do
-        if mise list | grep -q "$PLUGIN_NAME:$tool"; then
-            log "Uninstalling $tool..."
-            mise uninstall "$PLUGIN_NAME:$tool" || warn "Failed to uninstall $tool"
-        fi
+    # shellcheck disable=SC2066
+    for tool in $(mise list --no-header | awk '{print $1}' | grep ^$PLUGIN_NAME); do
+        log "Uninstalling $tool..."
+        mise uninstall "$tool" || warn "Failed to uninstall $tool"
     done
     
     # Remove plugin
@@ -78,93 +76,19 @@ main() {
     # Test 2: Test with multiple tools
     log "Test 2: Testing with multiple tools..."
     
-    for tool in "${TEST_TOOLS[@]}"; do
-        log "Testing tool: $tool"
-        
-        # Test version listing
-        log "  Attempting to list versions for $tool..."
-        VERSIONS_OUTPUT=$(mise list-versions "$PLUGIN_NAME:$tool" 2>&1)
-        if echo "$VERSIONS_OUTPUT" | grep -q "^[0-9]"; then
-            log "  ✓ Version listing works for $tool"
-            LATEST_VERSION=$(echo "$VERSIONS_OUTPUT" | grep "^[0-9]" | tail -1)
-            log "  ✓ Latest version: $LATEST_VERSION"
-            
-            # Store the working tool and version for installation test
-            if [[ -z "$WORKING_TOOL" ]]; then
-                WORKING_TOOL="$tool"
-                WORKING_VERSION="$LATEST_VERSION"
+    # Run e2e tests with error handling
+    for e2e_file in test/e2e/*.e2e.sh; do
+        if [[ -f "$e2e_file" ]]; then
+            log "Running $(basename "$e2e_file")..."
+            # shellcheck disable=SC1090
+            if ! bash "$e2e_file"; then
+                error "✗ E2E test failed: $(basename "$e2e_file")"
+                exit 1
             fi
-        else
-            warn "  ! Version listing failed for $tool"
-            warn "  Output: $(echo "$VERSIONS_OUTPUT" | head -1)"
+            log "✓ $(basename "$e2e_file") passed"
         fi
-        echo
     done
-    
-    # Set fallback if no tool worked
-    if [[ -z "$WORKING_TOOL" ]]; then
-        warn "No tools worked for version listing, using fallback for installation test"
-        WORKING_TOOL="git-scm.org"
-        WORKING_VERSION="2.44.0"
-    fi
-    
-    # Test 3: Install tool (only if we have a working tool)
-    if [[ "$WORKING_VERSION" =~ ^[0-9] ]]; then
-        log "Test 3: Installing $WORKING_TOOL@$WORKING_VERSION..."
-        if mise install "$PLUGIN_NAME:$WORKING_TOOL@$WORKING_VERSION"; then
-            log "✓ Installation successful for $WORKING_TOOL"
-            
-            # Test 4: Verify installation
-            log "Test 4: Verifying installation..."
-            if mise list | grep -q "$PLUGIN_NAME:$WORKING_TOOL"; then
-                log "✓ Tool appears in installed tools list"
-            else
-                warn "! Tool not found in installed tools list"
-            fi
-            
-            # Test 5: Test execution environment
-            log "Test 5: Testing execution environment..."
-            # Choose appropriate test command based on tool
-            case "$WORKING_TOOL" in
-                "git-scm.org")
-                    TEST_CMD=("git" "--version")
-                    ;;
-                "nodejs.org")
-                    TEST_CMD=("node" "--version")
-                    ;;
-                "python.org")
-                    TEST_CMD=("python" "--version")
-                    ;;
-                *)
-                    TEST_CMD=("echo" "No specific test for this tool")
-                    ;;
-            esac
-            
-            if mise exec "$PLUGIN_NAME:$WORKING_TOOL@$WORKING_VERSION" -- "${TEST_CMD[@]}" > /dev/null 2>&1; then
-                log "✓ Tool execution works"
-            else
-                warn "! Tool execution test skipped (tool may not have expected binary)"
-            fi
-            
-            # Test 6: Test with .tool-versions file
-            log "Test 6: Testing .tool-versions file..."
-            echo "$PLUGIN_NAME:$WORKING_TOOL $WORKING_VERSION" > .tool-versions
-            
-            if mise install; then
-                log "✓ .tool-versions installation works"
-            else
-                warn "! .tool-versions installation failed"
-            fi
-            
-            # Cleanup .tool-versions
-            rm -f .tool-versions
-        else
-            warn "! Installation failed - this may indicate issues with the backend plugin"
-        fi
-    else
-        warn "! Skipping installation tests - version listing not working properly"
-    fi
-    
+
     log "All integration tests passed! ✅"
 }
 
