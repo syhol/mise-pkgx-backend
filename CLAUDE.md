@@ -74,7 +74,6 @@ URL patterns:
     ├── test_platform_detection.lua # Unit tests for platform detection
     ├── test_version_listing.lua    # Unit tests for version listing
     ├── test_exec_env.lua           # Unit tests for environment setup
-    ├── test_basic_integration.sh   # Basic integration tests
     └── test_integration.sh         # Full integration tests
 ```
 
@@ -106,7 +105,6 @@ The project includes comprehensive test suites:
 - `test_exec_env.lua`: Tests PATH environment variable construction
 
 **Integration Tests** (in `test/` directory):
-- `test_basic_integration.sh`: Basic integration testing with actual mise commands
 - `test_integration.sh`: Full end-to-end testing (may be unstable due to alpha status)
 - Tests plugin linking, backend invocation, and basic functionality
 - Tests multiple tools: git-scm.org, nodejs.org, python.org
@@ -125,9 +123,6 @@ mise test:integration
 lua test/test_platform_detection.lua
 lua test/test_version_listing.lua  
 lua test/test_exec_env.lua
-
-# Basic integration test only
-./test/test_basic_integration.sh
 
 # Direct script execution (alternative)
 ./mise-tasks/test

@@ -74,12 +74,12 @@ run_integration_tests() {
         return 0
     fi
     
-    log "Running basic integration tests..."
-    if ./test/test_basic_integration.sh; then
-        log "✓ Basic integration tests passed"
+    log "Running integration tests..."
+    if ./test/test_integration.sh; then
+        log "✓ Integration tests passed"
         return 0
     else
-        error "✗ Basic integration tests failed"
+        error "✗ Integration tests failed"
         return 1
     fi
 }
