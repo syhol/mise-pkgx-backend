@@ -28,26 +28,24 @@ The plugin follows mise's backend plugin architecture with three main hook files
 
 ## Development Commands
 
-Since this is a Lua-based mise plugin, there are no traditional build/test commands. Development workflow:
+This project uses mise tasks for common development workflows:
 
 ```bash
-# Link plugin for local development
-mise plugin link pkgx .
+# Run tests
+mise test              # Unit tests only
+mise test:unit         # Unit tests only (explicit)
+mise test:integration  # Unit and integration tests
 
-# Test with debug output
-mise --debug list-versions pkgx:git-scm.org
+# Plugin development workflow
+mise plugin link pkgx .             # Link plugin for local development
+mise --debug list-versions pkgx:git-scm.org  # Test with debug output
+mise list-versions pkgx:git-scm.org # Test listing versions
+mise use pkgx:git-scm.org@latest    # Test installation
+mise exec pkgx:git-scm.org@latest -- which git  # Test execution environment
+mise plugin rm pkgx                 # Remove when done
 
-# Test listing versions
-mise list-versions pkgx:git-scm.org
-
-# Test installation
-mise use pkgx:git-scm.org@latest
-
-# Test execution environment
-mise exec pkgx:git-scm.org@latest -- which git
-
-# Unlink when done
-mise plugin unlink pkgx
+# Available mise tasks
+mise tasks                          # List all available tasks
 ```
 
 ## API Integration
@@ -65,10 +63,19 @@ URL patterns:
 
 ```
 ├── metadata.lua              # Plugin metadata
-└── hooks/
-    ├── backend_exec_env.lua   # Environment setup
-    ├── backend_install.lua    # Installation logic
-    └── backend_list_versions.lua # Version fetching
+├── mise.toml                 # Mise configuration with test tasks
+├── hooks/
+│   ├── backend_exec_env.lua   # Environment setup
+│   ├── backend_install.lua    # Installation logic
+│   └── backend_list_versions.lua # Version fetching
+├── mise-tasks/
+│   └── test                  # Test runner script (mise task)
+└── test/
+    ├── test_platform_detection.lua # Unit tests for platform detection
+    ├── test_version_listing.lua    # Unit tests for version listing
+    ├── test_exec_env.lua           # Unit tests for environment setup
+    ├── test_basic_integration.sh   # Basic integration tests
+    └── test_integration.sh         # Full integration tests
 ```
 
 ## Hook Function Implementation
@@ -93,31 +100,37 @@ The plugin includes error handling for:
 
 The project includes comprehensive test suites:
 
-**Unit Tests**:
+**Unit Tests** (in `test/` directory):
 - `test_platform_detection.lua`: Tests OS/architecture detection functions
 - `test_version_listing.lua`: Tests version fetching and parsing logic  
 - `test_exec_env.lua`: Tests PATH environment variable construction
 
-**Integration Tests**:
+**Integration Tests** (in `test/` directory):
 - `test_basic_integration.sh`: Basic integration testing with actual mise commands
 - `test_integration.sh`: Full end-to-end testing (may be unstable due to alpha status)
 - Tests plugin linking, backend invocation, and basic functionality
 
 **Running Tests**:
 ```bash
-# Run unit tests only
-./run_tests.sh
+# Run unit tests only (using mise task)
+mise test
+# or
+mise test:unit
 
 # Run unit and integration tests (requires mise)
-./run_tests.sh --with-integration
+mise test:integration
 
 # Individual unit tests
-lua test_platform_detection.lua
-lua test_version_listing.lua  
-lua test_exec_env.lua
+lua test/test_platform_detection.lua
+lua test/test_version_listing.lua  
+lua test/test_exec_env.lua
 
 # Basic integration test only
-./test_basic_integration.sh
+./test/test_basic_integration.sh
+
+# Direct script execution (alternative)
+./mise-tasks/test
+./mise-tasks/test --with-integration
 ```
 
 ## Development Best Practices
@@ -126,5 +139,5 @@ lua test_exec_env.lua
 - Use `mise --debug` flag for troubleshooting hook execution
 - Handle cross-platform scenarios (Linux/Darwin, x86-64/aarch64)
 - Provide meaningful error messages with context
-- Run test suite before making changes: `./run_tests.sh --with-integration`
+- Run test suite before making changes: `mise test:integration`
 - Test all three hooks thoroughly before release

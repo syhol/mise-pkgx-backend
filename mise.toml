@@ -1,2 +1,15 @@
-[tools]
-"pkgx-test:git-scm.org" = "latest"
+# Example tool configuration (commented out to avoid warnings)
+# [tools]
+# "pkgx:git-scm.org" = "latest"
+
+[tasks.test]
+description = "Run test suite for mise-pkgx-backend"
+run = "./mise-tasks/test"
+
+[tasks."test:unit"]
+description = "Run only unit tests"
+run = "./mise-tasks/test"
+
+[tasks."test:integration"]
+description = "Run unit and integration tests"
+run = "./mise-tasks/test --with-integration"
