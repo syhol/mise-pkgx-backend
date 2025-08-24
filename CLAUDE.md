@@ -71,10 +71,13 @@ URL patterns:
 ├── mise-tasks/
 │   └── test                  # Test runner script (mise task)
 └── test/
+    ├── assert.sh             # Test assertion helpers
     ├── test_platform_detection.lua # Unit tests for platform detection
     ├── test_version_listing.lua    # Unit tests for version listing
     ├── test_exec_env.lua           # Unit tests for environment setup
-    └── test_integration.sh         # Full integration tests
+    ├── test_integration.sh         # Integration test runner
+    └── e2e/
+        └── tar.e2e.sh        # End-to-end test for gnu.org/tar
 ```
 
 ## Hook Function Implementation
@@ -104,10 +107,17 @@ The project includes comprehensive test suites:
 - `test_version_listing.lua`: Tests version fetching and parsing logic  
 - `test_exec_env.lua`: Tests PATH environment variable construction
 
-**Integration Tests** (in `test/` directory):
-- `test_integration.sh`: Full end-to-end testing (may be unstable due to alpha status)
-- Tests plugin linking, backend invocation, and basic functionality
-- Tests multiple tools: git-scm.org, nodejs.org, python.org
+**Integration Tests**:
+- `test_integration.sh`: Main integration test runner that:
+  - Tests plugin linking and basic functionality
+  - Runs all e2e tests with error handling and clear failure reporting
+  - Performs cleanup after tests complete
+
+**End-to-End Tests** (in `test/e2e/` directory):
+- `tar.e2e.sh`: Tests gnu.org/tar tool installation and execution
+- Each e2e test runs independently and can use the `$PLUGIN_NAME` environment variable
+- Tests use `assert.sh` helper for common assertion patterns
+- Failed e2e tests report the specific filename that failed
 
 **Running Tests**:
 ```bash
@@ -127,6 +137,13 @@ lua test/test_exec_env.lua
 # Direct script execution (alternative)
 ./mise-tasks/test
 ./mise-tasks/test --with-integration
+
+# Run integration tests directly
+./test/test_integration.sh
+
+# Individual e2e tests (requires PLUGIN_NAME to be set)
+export PLUGIN_NAME="pkgx-test"
+bash test/e2e/tar.e2e.sh
 ```
 
 ## Development Best Practices
